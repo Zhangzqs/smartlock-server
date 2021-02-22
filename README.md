@@ -1,1 +1,1 @@
-Hello
+这是一个使用Golang基于Beego的智能门锁服务器实现
