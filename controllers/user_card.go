@@ -2,10 +2,11 @@ package controllers
 
 import (
 	"fmt"
+	"smartlock-server/models"
+
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
 	beego "github.com/beego/beego/v2/server/web"
-	"smartlock-server/models"
 )
 
 // /user/card 控制器
@@ -14,7 +15,7 @@ type CardController struct {
 }
 
 //获取该用户拥有的所有卡片
-func (c *CardController) Get()  {
+func (c *CardController) Get() {
 	var user models.User
 	user.UserName = c.Ctx.Input.Query("user_name")
 	o := orm.NewOrm()
@@ -26,16 +27,15 @@ func (c *CardController) Get()  {
 	//此时已经正确读取
 
 	userName := user.UserName
-	c.Ctx.WriteString(fmt.Sprintf("读取用户%s的所有卡片",userName))
+	c.Ctx.WriteString(fmt.Sprintf("读取用户%s的所有卡片", userName))
 }
 
 //添加一张新卡片
-func (c *CardController) Post()  {
+func (c *CardController) Post() {
 
 }
 
 //解绑一张卡片
-func (c *CardController) Delete()  {
+func (c *CardController) Delete() {
 
 }
-
