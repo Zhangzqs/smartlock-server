@@ -1,4 +1,4 @@
-package smartlockClient
+package locklog
 
 import (
 	"smartlock-server/models"
@@ -20,16 +20,17 @@ func ButtonUnlockLog(deviceId string, _type string) {
 		logs.Warn("记录按键开锁日志发生异常", err)
 		return
 	}
-	logs.Debug("按键开锁日志记录成功", "DeviceId:", deviceId)
+	logs.Debug("按键开锁日志记录成功", "DeviceID:", deviceId)
 }
 
 // UserUnlockLog 记录用户开锁日志
-func UserUnlockLog(deviceID string, userName string, method string, success bool, info string) {
+func UserUnlockLog(deviceID string, userName string, method string, success bool, auth string, info string) {
 	var log models.UserUnlockLog
 	log.UserName = userName
 	log.DeviceID = deviceID
 	log.Method = method
 	log.Info = info
+	log.Auth = auth
 	if success {
 		log.Success = 1
 	} else {
@@ -42,6 +43,6 @@ func UserUnlockLog(deviceID string, userName string, method string, success bool
 		logs.Warn("记录用户开锁日志发生异常", err)
 		return
 	}
-	logs.Debug("用户开锁日志记录成功", "DeviceId:", deviceID, "UserName:", userName, "Method:", method)
+	logs.Debug("用户开锁日志记录成功", "DeviceID:", deviceID, "UserName:", userName, "Method:", method)
 
 }

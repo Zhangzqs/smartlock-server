@@ -10,34 +10,33 @@ var client mqtt.Client
 
 // 连接到mqtt服务器
 func ConnectToServer() mqtt.Client {
-	broker := "broker.emqx.io"
+	//broker := "broker.emqx.io"
+	broker := "localhost"
 	port := 1883
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(fmt.Sprintf("tcp://%s:%d",broker,port))
+	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", broker, port))
 	opts.SetClientID("SmartLock_Server")
 	opts.SetDefaultPublishHandler(func(client mqtt.Client, message mqtt.Message) {
-		logs.Debug("Received unhandled message: ",string(message.Payload())," from topic",message.Topic())
+		logs.Debug("Received unhandled message: ", string(message.Payload()), " from topic", message.Topic())
 	})
-	opts.SetAutoReconnect(true);
+	opts.SetAutoReconnect(true)
 	opts.OnConnect = func(client mqtt.Client) {
 		logs.Debug("Mqtt server connected.")
 	}
 
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
-		logs.Debug("Connect lost:",err)
+		logs.Debug("Connect lost:", err)
 		ConnectToServer()
 	}
 
 	client := mqtt.NewClient(opts)
 
-	if token:=client.Connect();token.Wait()&&token.Error()!=nil{
+	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
 
 	return client
 }
-
-
 
 func init() {
 	client = ConnectToServer()

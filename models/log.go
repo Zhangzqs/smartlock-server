@@ -9,6 +9,9 @@ const (
 	//AppMethod App开锁
 	AppMethod = "app" //App开锁
 
+	//TokenMethod token方式开锁
+	TokenMethod = "token"
+
 	//FaceMethod 人脸开锁
 	FaceMethod = "face" //人脸开锁
 
@@ -32,7 +35,8 @@ type UserUnlockLog struct {
 	DeviceID string `json:"device_id" orm:"column(device_id)"`
 	Method   string `json:"method"`
 	Success  int    `json:"success"` //success为1表示成功开锁，0表示失败
-	Info     string `json:"info"`    //开锁备注
+	Auth     string // 验证方式，如果是卡，就记录uid，如果是token就记录token字符串
+	Info     string `json:"info"` //开锁备注
 	Time     int    `json:"time"`
 }
 

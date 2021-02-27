@@ -2,6 +2,7 @@ package controllers
 
 import (
 	json "encoding/json"
+	"smartlock-server/locklog"
 	"smartlock-server/models"
 	"smartlock-server/smartlockClient"
 
@@ -18,7 +19,7 @@ type DeviceController struct {
 // 未注册信息，密码键盘，获取设备信息
 func (c *DeviceController) Get() {
 	deviceID := c.Ctx.Input.Param(":device_id")
-	c.Data["DeviceId"] = deviceID
+	c.Data["DeviceID"] = deviceID
 	o := orm.NewOrm()
 	qs := o.QueryTable(new(models.UserDevice))
 	exist := qs.Filter("device_id", deviceID).Exist()
@@ -76,10 +77,10 @@ func (c *DeviceController) Post() {
 		switch ins.Instruction {
 		case "unlock":
 			smartlockClient.Unlock(device.DeviceID)
-			smartlockClient.UserUnlockLog(device.DeviceID, ins.UserName, models.AppMethod, true, "正常远程开锁")
+			locklog.UserUnlockLog(device.DeviceID, ins.UserName, models.AppMethod, true, "正常远程开锁")
 		case "open":
 			smartlockClient.LockOpen(device.DeviceID)
-			smartlockClient.UserUnlockLog(device.DeviceID, ins.UserName, models.AppMethod, true, "正常远程常开门锁")
+			locklog.UserUnlockLog(device.DeviceID, ins.UserName, models.AppMethod, true, "正常远程常开门锁")
 		}
 	case "led":
 	case "sound":

@@ -36,7 +36,7 @@ func (c *LoginController) Post() {
 	}
 	data := c.Ctx.Input.RequestBody
 
-	logs.Debug("收到一个登录请求体：",string(data))
+	logs.Debug("收到一个登录请求体：", string(data))
 
 	var responseData loginRegResponse
 	err := json.Unmarshal(data, &user)
@@ -56,13 +56,13 @@ func (c *LoginController) Post() {
 	userModel.UserName = user.UserName
 	err = o.Read(&userModel)
 
-	logs.Debug("读取用户数据结果: ",err)
+	logs.Debug("读取用户数据结果: ", err)
 
 	if err != nil {
 		if err == orm.ErrNoRows {
 			responseData = loginRegResponse{Code: NotFoundUser} //2: 不存在用户
 		} else {
-			responseData= loginRegResponse{Code: Unknown} //3: 未知原因
+			responseData = loginRegResponse{Code: Unknown} //3: 未知原因
 			logs.Warn(err)
 		}
 
@@ -71,7 +71,7 @@ func (c *LoginController) Post() {
 		return
 	}
 
-	if userModel.Password != user.Password{
+	if userModel.Password != user.Password {
 		c.Data["json"] = &loginRegResponse{Code: PasswordError}
 		_ = c.ServeJSON()
 		return
@@ -83,7 +83,7 @@ func (c *LoginController) Post() {
 		UserName: user.UserName, //返回登陆成功的用户名
 	}
 
-	logs.Debug("登录结果：",responseData)
+	logs.Debug("登录结果：", responseData)
 	c.Data["json"] = &responseData
 	_ = c.ServeJSON()
 }
@@ -98,15 +98,16 @@ func (c *RegisterController) Post() {
 	var user struct {
 		UserName string `json:"user_name"`
 		Password string `json:"password"`
+		Phone    string `json:"phone"`
 	}
 	data := c.Ctx.Input.RequestBody
 
-	logs.Debug("收到一个注册请求体：",string(data))
+	logs.Debug("收到一个注册请求体：", string(data))
 
 	var responseData loginRegResponse
 	err := json.Unmarshal(data, &user)
 	if err != nil {
-		logs.Error("JSON文件解析失败", string(data[:]))
+		logs.Error("JSON文件解析失败", string(data))
 		logs.Error(err)
 		responseData = loginRegResponse{Code: JsonFormatError} //1: 表示JSON文件有误
 		c.Data["json"] = &responseData
@@ -121,9 +122,9 @@ func (c *RegisterController) Post() {
 	userModel.UserName = user.UserName
 	err = o.Read(&userModel)
 
-	logs.Debug("读取用户数据结果: ",err)
+	logs.Debug("读取用户数据结果: ", err)
 
-	if err == nil{
+	if err == nil {
 		//读取无误，说明数据库已存在该用户了
 		responseData = loginRegResponse{Code: FoundUser} //4: 已存在该用户
 		c.Data["json"] = &responseData
@@ -140,16 +141,16 @@ func (c *RegisterController) Post() {
 		return
 	}
 
-
 	//此时证明该用户不存在，可以开始创建用户
 
 	userModel.Password = user.Password
+	userModel.Phone = user.Phone
 
-	id,err := o.Insert(&userModel)
+	id, err := o.Insert(&userModel)
 
 	if err != nil {
 		//插入出错
-		logs.Warn("创建用户出错",user.UserName,err)
+		logs.Warn("创建用户出错", user.UserName, err)
 		responseData = loginRegResponse{Code: Unknown}
 		c.Data["json"] = &responseData
 		_ = c.ServeJSON()
@@ -157,14 +158,14 @@ func (c *RegisterController) Post() {
 	}
 
 	//成功创建用户
-	logs.Debug("成功创建用户",user.UserName,"当前用户数目为：",id)
+	logs.Debug("成功创建用户", user.UserName, "当前用户数目为：", id)
 
 	responseData = loginRegResponse{
 		Code:     Ok,            //0: 表示成功
 		UserName: user.UserName, //返回注册成功的用户名
 	}
 
-	logs.Debug("注册结果：",responseData)
+	logs.Debug("注册结果：", responseData)
 	c.Data["json"] = &responseData
 	_ = c.ServeJSON()
 

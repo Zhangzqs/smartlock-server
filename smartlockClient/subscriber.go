@@ -2,62 +2,70 @@ package smartlockClient
 
 import (
 	"encoding/json"
-	"fmt"
-	"smartlock-server/models"
-
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"smartlock-server/locklog"
+	"smartlock-server/models"
+	"time"
 )
 
 //onUidReceived 当收到一张卡片的UID消息时
 func onUidReceived(client mqtt.Client, message mqtt.Message) {
 	logs.Debug("收到mqtt消息", message)
-	var uidMessage struct {
+	var uidMsg struct {
 		DeviceID string `json:"device_id"`
 		UID      string `json:"uid"`
 	}
 
-	_ = json.Unmarshal(message.Payload(), &uidMessage)
+	_ = json.Unmarshal(message.Payload(), &uidMsg)
 
-	//先根据uid找到其绑定的用户名
-	var cardUser models.CardUser
-	cardUser.UID = uidMessage.UID
+	//按设备，按卡号过滤
 	o := orm.NewOrm()
-	err := o.Read(&cardUser)
-	if err != nil {
-		logs.Warn("开锁失败，用户信息读取出错,不存在该UID的用户", cardUser.UID)
-		UserUnlockLog(
-			uidMessage.DeviceID,
+	qs := o.QueryTable("card")
+	resultView := qs.Filter("device_id", uidMsg.DeviceID).
+		Filter("uid", uidMsg.UID)
+
+	if !resultView.Exist() {
+		//该门锁上不存在该门卡
+		logs.Warn("开锁失败，不存在该门卡", uidMsg.UID)
+		locklog.UserUnlockLog(
+			uidMsg.DeviceID,
 			"",
 			models.CardMethod,
 			false,
-			fmt.Sprintf("门卡UID:%s", cardUser.UID),
+			uidMsg.UID,
+			"不存在的门卡",
 		)
 		return
 	}
 
-	//读取成功
+	var cardModels models.Card
+	_ = resultView.One(&cardModels)
 
-	var userDevice models.UserDevice
-	qs := o.QueryTable("user_device")
-	err = qs.Filter("user_name", cardUser.UserName).
-		Filter("device_id", uidMessage.DeviceID).One(&userDevice)
-
-	if err == orm.ErrNoRows {
-		//找不到设备
-		logs.Warn("设备:", uidMessage.DeviceID, "用户：", cardUser.UserName, "不存在关系，无权限")
-		logs.Warn(err)
-		UserUnlockLog(uidMessage.DeviceID, cardUser.UserName, models.CardMethod, false, "用户与设备无关联")
+	// 存在该门卡，开始查看有效期
+	//判断门卡有效期
+	if now := int(time.Now().Unix()); now < cardModels.BeginTime {
+		logs.Warn("开锁失败，门卡未生效")
+		locklog.UserUnlockLog(cardModels.DeviceID, cardModels.UserName, models.CardMethod, false, uidMsg.UID, "未生效的门卡")
 		return
+	} else {
+		//开始检测门卡是否失效
+		if cardModels.EndTime != 0 && now > cardModels.EndTime {
+			//门卡已失效
+			logs.Warn("开锁失败，门卡已过期")
+			locklog.UserUnlockLog(cardModels.DeviceID, cardModels.UserName, models.CardMethod, false, uidMsg.UID, "已失效的门卡")
+			return
+		}
 	}
 
 	//有开锁权限，那么就下发MQTT指令开锁并记录开锁日志
-	Unlock(uidMessage.DeviceID)
+	Unlock(cardModels.DeviceID)
 
-	UserUnlockLog(uidMessage.DeviceID, cardUser.UserName, models.CardMethod, true, "正常开锁")
+	locklog.UserUnlockLog(cardModels.DeviceID, cardModels.UserName, models.CardMethod, true, uidMsg.UID, "正常开锁")
 
 	logs.Debug("成功开锁")
+
 }
 
 // 当接收到一个按键请求时
@@ -73,10 +81,10 @@ func onButtonReceived(client mqtt.Client, message mqtt.Message) {
 	switch buttonEvent.Type {
 	case "click":
 		// 点击按钮可开锁
-		ButtonUnlockLog(buttonEvent.DeviceID, models.UnlockType)
+		locklog.ButtonUnlockLog(buttonEvent.DeviceID, models.UnlockType)
 	case "double_click":
 		// 双击按钮可门锁常开
-		ButtonUnlockLog(buttonEvent.DeviceID, models.OpenType)
+		locklog.ButtonUnlockLog(buttonEvent.DeviceID, models.OpenType)
 	case "long_press":
 		// 长按按钮可重启设备
 		logs.Debug("设备", buttonEvent.DeviceID, "正常重启")
