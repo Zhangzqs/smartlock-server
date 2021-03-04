@@ -19,15 +19,15 @@ type TokenUnlockController struct {
 func (c *TokenUnlockController) Post() {
 	var tokenMsg struct {
 		DeviceID string `json:"device_id"`
-		Token    string `json:"tokenModel"`
+		Token    string `json:"token"`
 	}
 	_ = json.Unmarshal(c.Ctx.Input.RequestBody, &tokenMsg)
 
 	//按设备，按卡号过滤
 	o := orm.NewOrm()
-	qs := o.QueryTable("tokenModel")
+	qs := o.QueryTable("token")
 	resultView := qs.Filter("device_id", tokenMsg.DeviceID).
-		Filter("tokenModel", tokenMsg.Token)
+		Filter("token", tokenMsg.Token)
 
 	if !resultView.Exist() {
 		//该门锁上不存在该门卡
@@ -68,4 +68,5 @@ func (c *TokenUnlockController) Post() {
 	locklog.UserUnlockLog(tokenModel.DeviceID, tokenModel.UserName, models.CardMethod, true, tokenMsg.Token, "正常开锁")
 
 	logs.Debug("成功开锁")
+	c.Ctx.WriteString("OK")
 }

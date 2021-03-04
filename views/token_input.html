@@ -5,11 +5,44 @@
     <title>口令输入</title>
 </head>
 <body>
-    当前门锁设备: {{.DeviceId}} <br>
-    请输入口令：
-    <form>
-        <input name="token" type="password">
-        <input type="submit">
-    </form>
+<script>
+
+    function getDeviceId() {
+        let url = document.location.href;
+        let urlSp = url.split('/')
+        return urlSp[urlSp.length-1];
+    }
+    function sendToken() {
+        let httpReq = new XMLHttpRequest();
+        httpReq.open('POST','/token_unlock',true);
+        httpReq.setRequestHeader("Content-type","application/json");
+        let json = JSON.stringify({
+            device_id:getDeviceId(),
+            token:document.getElementById('input_token').value
+        });
+        httpReq.send(json);
+        httpReq.onreadystatechange = ()=>{//请求后的回调接口，可将请求成功后要执行的程序写在其中
+            if (httpReq.readyState === 4 && httpReq.status === 200) {//验证请求是否发送成功
+                let data = httpReq.responseText;//获取到服务端返回的数据
+                console.log(data);
+                if (data === 'OK'){
+                    alert("开锁成功");
+                }else{
+                    alert('未知原因开锁失败');
+                }
+            }
+        };
+    }
+</script>
+    当前的门锁设备ID: <a id="device_id"></a> <br>
+    请输入口令：<br>
+    <input id="input_token" type="password">
+    <button onclick="sendToken()">提交</button>
+<script>
+    let ele_a = document.getElementById('device_id')
+    ele_a.innerText = getDeviceId();
+</script>
+
+
 </body>
 </html>

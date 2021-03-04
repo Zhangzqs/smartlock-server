@@ -12,7 +12,7 @@ import (
 
 //onUidReceived 当收到一张卡片的UID消息时
 func onUidReceived(client mqtt.Client, message mqtt.Message) {
-	logs.Debug("收到mqtt消息", message)
+	logs.Debug("收到门卡请求", string(message.Payload()))
 	var uidMsg struct {
 		DeviceID string `json:"device_id"`
 		UID      string `json:"uid"`

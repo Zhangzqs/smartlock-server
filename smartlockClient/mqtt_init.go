@@ -4,22 +4,33 @@ import (
 	"fmt"
 	"github.com/beego/beego/v2/core/logs"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"math/rand"
+	"time"
 )
 
 var client mqtt.Client
 
+func RandString(len int) string {
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+	bytes := make([]byte, len)
+	for i := 0; i < len; i++ {
+		b := r.Intn(26) + 65
+		bytes[i] = byte(b)
+	}
+	return string(bytes)
+}
+
 // 连接到mqtt服务器
 func ConnectToServer() mqtt.Client {
-	//broker := "broker.emqx.io"
-	broker := "localhost"
+	broker := "broker.emqx.io"
+	//broker := "10.1.160.240"
 	port := 1883
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", broker, port))
-	opts.SetClientID("SmartLock_Server")
+	opts.SetClientID("SmartLock_Server_" + RandString(10))
 	opts.SetDefaultPublishHandler(func(client mqtt.Client, message mqtt.Message) {
 		logs.Debug("Received unhandled message: ", string(message.Payload()), " from topic", message.Topic())
 	})
-	opts.SetAutoReconnect(true)
 	opts.OnConnect = func(client mqtt.Client) {
 		logs.Debug("Mqtt server connected.")
 	}
@@ -32,7 +43,8 @@ func ConnectToServer() mqtt.Client {
 	client := mqtt.NewClient(opts)
 
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
+		//panic(token.Error())
+		logs.Warn(token.Error())
 	}
 
 	return client
