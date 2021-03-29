@@ -22,8 +22,8 @@ func RandString(len int) string {
 
 // 连接到mqtt服务器
 func ConnectToServer() mqtt.Client {
-	broker := "broker.emqx.io"
-	//broker := "10.1.160.240"
+	//broker := "broker.emqx.io"
+	broker := "10.1.160.240"
 	port := 1883
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", broker, port))
@@ -37,9 +37,11 @@ func ConnectToServer() mqtt.Client {
 
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
 		logs.Debug("Connect lost:", err)
+		client.Disconnect(250)
+		logs.Debug("Mqtt disconnected")
 		ConnectToServer()
 	}
-
+	opts.SetKeepAlive(2*time.Second)
 	client := mqtt.NewClient(opts)
 
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
