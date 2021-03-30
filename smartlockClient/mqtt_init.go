@@ -34,14 +34,15 @@ func ConnectToServer() mqtt.Client {
 	opts.OnConnect = func(client mqtt.Client) {
 		logs.Debug("Mqtt server connected.")
 	}
-
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
 		logs.Debug("Connect lost:", err)
 		client.Disconnect(250)
 		logs.Debug("Mqtt disconnected")
-		ConnectToServer()
+		//ConnectToServer()
 	}
-	opts.SetKeepAlive(2*time.Second)
+	//使用SetAutoReconnect代替手动重连
+	opts.SetAutoReconnect(true)
+	opts.SetKeepAlive(2 * time.Second)
 	client := mqtt.NewClient(opts)
 
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
