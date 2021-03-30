@@ -33,6 +33,8 @@ func ConnectToServer() mqtt.Client {
 	})
 	opts.OnConnect = func(client mqtt.Client) {
 		logs.Debug("Mqtt server connected.")
+		//注册mqtt话题
+		RegisterForMqttRouter(client)
 	}
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
 		logs.Debug("Connect lost:", err)
@@ -49,13 +51,11 @@ func ConnectToServer() mqtt.Client {
 		//panic(token.Error())
 		logs.Warn(token.Error())
 	}
-
 	return client
 }
 
 func init() {
 	client = ConnectToServer()
-	RegisterForMqttRouter(client)
 	////定时发布话题
 	//go func(client mqtt.Client) {
 	//	topic:="Server1"
