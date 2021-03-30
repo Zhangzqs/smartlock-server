@@ -31,10 +31,11 @@ func ConnectToServer() mqtt.Client {
 	opts.SetDefaultPublishHandler(func(client mqtt.Client, message mqtt.Message) {
 		logs.Debug("Received unhandled message: ", string(message.Payload()), " from topic", message.Topic())
 	})
-	opts.OnConnect = func(client mqtt.Client) {
+	opts.OnConnect = func(client1 mqtt.Client) {
 		logs.Debug("Mqtt server connected.")
 		//注册mqtt话题
-		RegisterForMqttRouter(client)
+		RegisterForMqttRouter(client1)
+		client = client1
 	}
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
 		logs.Debug("Connect lost:", err)
