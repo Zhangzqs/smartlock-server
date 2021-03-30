@@ -40,10 +40,8 @@ func ConnectToServer() mqtt.Client {
 		logs.Debug("Connect lost:", err)
 		client.Disconnect(250)
 		logs.Debug("Mqtt disconnected")
-		//ConnectToServer()
+		ConnectToServer() //重连MQTT服务器
 	}
-	//使用SetAutoReconnect代替手动重连
-	opts.SetAutoReconnect(true)
 	opts.SetKeepAlive(2 * time.Second)
 	client := mqtt.NewClient(opts)
 
