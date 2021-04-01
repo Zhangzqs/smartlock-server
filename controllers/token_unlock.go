@@ -50,14 +50,14 @@ func (c *TokenUnlockController) Post() {
 	//判断门卡有效期
 	if now := int(time.Now().Unix()); now < tokenModel.BeginTime {
 		logs.Warn("开锁失败，门卡未生效")
-		locklog.UserUnlockLog(tokenModel.DeviceID, tokenModel.UserName, models.CardMethod, false, tokenMsg.Token, "未生效的口令")
+		locklog.UserUnlockLog(tokenModel.DeviceID, tokenModel.UserName, models.TokenMethod, false, tokenMsg.Token, "未生效的口令")
 		return
 	} else {
 		//开始检测门卡是否失效
 		if tokenModel.EndTime != 0 && now > tokenModel.EndTime {
 			//门卡已失效
 			logs.Warn("开锁失败，门卡已过期")
-			locklog.UserUnlockLog(tokenModel.DeviceID, tokenModel.UserName, models.CardMethod, false, tokenMsg.Token, "已失效的口令")
+			locklog.UserUnlockLog(tokenModel.DeviceID, tokenModel.UserName, models.TokenMethod, false, tokenMsg.Token, "已失效的口令")
 			return
 		}
 	}
@@ -65,7 +65,7 @@ func (c *TokenUnlockController) Post() {
 	//有开锁权限，那么就下发MQTT指令开锁并记录开锁日志
 	smartlockClient.Unlock(tokenModel.DeviceID)
 
-	locklog.UserUnlockLog(tokenModel.DeviceID, tokenModel.UserName, models.CardMethod, true, tokenMsg.Token, "正常开锁")
+	locklog.UserUnlockLog(tokenModel.DeviceID, tokenModel.UserName, models.TokenMethod, true, tokenMsg.Token, "正常开锁")
 
 	logs.Debug("成功开锁")
 	c.Ctx.WriteString("OK")
