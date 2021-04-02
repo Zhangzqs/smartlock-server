@@ -23,7 +23,7 @@ func RandString(len int) string {
 // 连接到mqtt服务器
 func ConnectToServer() mqtt.Client {
 	//broker := "broker.emqx.io"
-	broker := "10.1.160.240"
+	broker := "127.0.0.1"
 	port := 1883
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", broker, port))
